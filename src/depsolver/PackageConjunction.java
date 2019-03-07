@@ -4,19 +4,19 @@ import java.util.*;
 
 public class PackageConjunction
 {
-    private List<PackageReference> conjunctions;
+    private List<PackageAlternative> conjunctions;
     
     public PackageConjunction()
     {
         conjunctions = new ArrayList<>();
     }
     
-    public void add(PackageReference reference)
+    public void add(PackageAlternative alternative)
     {
-        conjunctions.add(reference);
+        conjunctions.add(alternative);
     }
 
-    public List<PackageReference> getConjunctions()
+    public List<PackageAlternative> getConjunctions()
     {
         return conjunctions;
     }

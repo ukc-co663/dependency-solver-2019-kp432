@@ -11,6 +11,8 @@ public class Main
 {
     public static void main(String[] args) throws IOException
     {
+        PackageReference.parse("A<=34");
+        
         TypeReference<List<Package>> repoType = new TypeReference<List<Package>>()
         {
         };

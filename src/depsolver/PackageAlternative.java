@@ -4,19 +4,19 @@ import java.util.*;
 
 public class PackageAlternative
 {
-    private List<PackageConjunction> alternatives;
+    private List<PackageReference> alternatives;
     
     public PackageAlternative()
     {
         alternatives = new ArrayList<>();
     }
     
-    public void add(PackageConjunction conjunction)
+    public void add(PackageReference reference)
     {
-        alternatives.add(conjunction);
+        alternatives.add(reference);
     }
 
-    public List<PackageConjunction> getAlternatives()
+    public List<PackageReference> getAlternatives()
     {
         return alternatives;
     }
