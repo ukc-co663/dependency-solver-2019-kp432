@@ -5,13 +5,18 @@ import com.alibaba.fastjson.TypeReference;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class Main
 {
     public static void main(String[] args) throws IOException
     {
-        PackageReference.parse("A<=34");
+        if (args.length != 3)
+        {
+            System.err.println("args.length != 3");
+            System.exit(-1);
+        }
         
         TypeReference<List<Package>> repoType = new TypeReference<List<Package>>()
         {
@@ -22,22 +27,18 @@ public class Main
         };
         List<String> initial = JSON.parseObject(readFile(args[1]), strListType);
         List<String> constraints = JSON.parseObject(readFile(args[2]), strListType);
-
-        // CHANGE CODE BELOW:
-        // using repo, initial and constraints, compute a solution and print the answer
-        for (Package p : repo)
+        List<String> commands = DependencySolver.solve(repo, initial, constraints);
+        int i;
+        
+        for (i = 0; i < commands.size(); i++)
         {
-            System.out.printf("package %s version %s\n", p.getName(), p.getVersion());
-            for (List<String> clause : p.getDepends())
-            {
-                System.out.printf("  dep:");
-                for (String q : clause)
-                {
-                    System.out.printf(" %s", q);
-                }
-                System.out.printf("\n");
-            }
+            commands.set(i, "\"" + commands.get(i) + "\"");
         }
+        
+        System.out.print("[ ");
+        System.out.print(String.join("\n, ", commands));
+        System.out.println(" ]");
+        System.exit(0);
     }
 
     static String readFile(String filename) throws IOException

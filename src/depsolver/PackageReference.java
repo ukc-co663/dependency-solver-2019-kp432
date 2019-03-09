@@ -5,13 +5,19 @@ import java.util.regex.*;
 public class PackageReference
 {
     private final static String PACKAGE_REFERENCE_PATTERN = 
-        "(\\w)((?:=)|(?:>)|(?:>=)|(?:<)|(?:<=))?(\\d+(?:\\.\\d+)?)?";
+        "([+-]?)([.a-zA-Z0-9-]+)((?:=)|(?:>)|(?:>=)|(?:<)|(?:<=))?(\\d+(?:\\.\\d+)?)?";
     
+    private PackageKind packageKind;
     private String packageName;
     private ComparisonOperator operator;
-    private double packageVersion;
+    private String packageVersion;
 
     private PackageReference() { }
+
+    public PackageKind getPackageKind()
+    {
+        return packageKind;
+    }
     
     public String getPackageName()
     {
@@ -23,9 +29,29 @@ public class PackageReference
         return operator;
     }
 
-    public double getPackageVersion()
+    public String getPackageVersion()
     {
         return packageVersion;
+    }
+    
+    public boolean fits(PackageReference other)
+    {
+        if (getPackageName().equals(other.getPackageName()))
+        {
+            if (other.operator == ComparisonOperator.None) return true;
+            if (other.operator == ComparisonOperator.Equal && 
+                getPackageVersion().compareTo(other.getPackageVersion()) == 0) return true;
+            if (other.operator == ComparisonOperator.Greater && 
+                getPackageVersion().compareTo(other.getPackageVersion()) > 0) return true;
+            if (other.operator == ComparisonOperator.GreaterOrEqual && 
+                getPackageVersion().compareTo(other.getPackageVersion()) >= 0) return true;
+            if (other.operator == ComparisonOperator.Less && 
+                getPackageVersion().compareTo(other.getPackageVersion()) < 0) return true;
+            if (other.operator == ComparisonOperator.LessOrEqual && 
+                getPackageVersion().compareTo(other.getPackageVersion()) <= 0) return true;
+        }
+        
+        return false;
     }
     
     public static PackageReference parse(String input)
@@ -33,7 +59,7 @@ public class PackageReference
         PackageReference result;
         Pattern pattern;
         Matcher matcher;
-        String name, operator, version;
+        String kind, name, operator, version;
         
         result = new PackageReference();
         pattern = Pattern.compile(PACKAGE_REFERENCE_PATTERN);
@@ -41,9 +67,23 @@ public class PackageReference
         
         if (matcher.matches())
         {
-            name = matcher.group(1);
-            operator = matcher.group(2);
-            version = matcher.group(3);
+            kind = matcher.group(1);
+            name = matcher.group(2);
+            operator = matcher.group(3);
+            version = matcher.group(4);
+            
+            if (kind == null)
+            {
+                result.packageKind = PackageKind.None;
+            }
+            else if (kind.equals("+"))
+            {
+                result.packageKind = PackageKind.Positive;
+            }
+            else
+            {
+                result.packageKind = PackageKind.Negative;
+            }
             
             result.packageName = name;
             
@@ -62,14 +102,27 @@ public class PackageReference
             
             if (version == null)
             {
-                version = "0.0";
+                version = "0";
             }
             
-            result.packageVersion = Double.parseDouble(version);
+            result.packageVersion = version;
             
             return result;
         }
 
         throw new IllegalArgumentException(input);
+    }
+    
+    public static PackageReference parse(Package _package)
+    {
+        PackageReference result;
+        
+        result = new PackageReference();
+        result.packageName = _package.getName();
+        result.packageVersion = _package.getVersion();
+        result.operator = ComparisonOperator.Equal;
+        result.packageKind = PackageKind.None;
+        
+        return result;
     }
 }
