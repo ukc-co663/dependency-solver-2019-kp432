@@ -5,12 +5,12 @@ import java.util.regex.*;
 public class PackageReference
 {
     private final static String PACKAGE_REFERENCE_PATTERN = 
-        "([+-]?)([.a-zA-Z0-9-]+)((?:=)|(?:>)|(?:>=)|(?:<)|(?:<=))?(\\d+(?:\\.\\d+)?)?";
+        "([+-]?)([.a-zA-Z0-9-]+)((?:=)|(?:>)|(?:>=)|(?:<)|(?:<=))?([0-9.]+?)?";
     
     private PackageKind packageKind;
     private String packageName;
     private ComparisonOperator operator;
-    private String packageVersion;
+    private PackageVersion packageVersion;
 
     private PackageReference() { }
 
@@ -29,7 +29,7 @@ public class PackageReference
         return operator;
     }
 
-    public String getPackageVersion()
+    public PackageVersion getPackageVersion()
     {
         return packageVersion;
     }
@@ -40,15 +40,15 @@ public class PackageReference
         {
             if (other.operator == ComparisonOperator.None) return true;
             if (other.operator == ComparisonOperator.Equal && 
-                getPackageVersion().compareTo(other.getPackageVersion()) == 0) return true;
+                packageVersion.getTotal() == other.packageVersion.getTotal()) return true;
             if (other.operator == ComparisonOperator.Greater && 
-                getPackageVersion().compareTo(other.getPackageVersion()) > 0) return true;
+                packageVersion.getTotal() > other.packageVersion.getTotal()) return true;
             if (other.operator == ComparisonOperator.GreaterOrEqual && 
-                getPackageVersion().compareTo(other.getPackageVersion()) >= 0) return true;
+                packageVersion.getTotal() >= other.packageVersion.getTotal()) return true;
             if (other.operator == ComparisonOperator.Less && 
-                getPackageVersion().compareTo(other.getPackageVersion()) < 0) return true;
+                packageVersion.getTotal() < other.packageVersion.getTotal()) return true;
             if (other.operator == ComparisonOperator.LessOrEqual && 
-                getPackageVersion().compareTo(other.getPackageVersion()) <= 0) return true;
+                packageVersion.getTotal() <= other.packageVersion.getTotal()) return true;
         }
         
         return false;
@@ -105,7 +105,7 @@ public class PackageReference
                 version = "0";
             }
             
-            result.packageVersion = version;
+            result.packageVersion = PackageVersion.parse(version);
             
             return result;
         }
@@ -119,7 +119,7 @@ public class PackageReference
         
         result = new PackageReference();
         result.packageName = _package.getName();
-        result.packageVersion = _package.getVersion();
+        result.packageVersion = PackageVersion.parse(_package.getVersion());
         result.operator = ComparisonOperator.Equal;
         result.packageKind = PackageKind.None;
         

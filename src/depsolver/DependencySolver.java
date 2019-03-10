@@ -41,7 +41,7 @@ public class DependencySolver
         List<String> commands, 
         PackageReference constraintReference)
     {
-        PackageReference alternativeReference;
+        PackageReference alternativeReference, currentReference;
         boolean installed;
         
         if (dependencies != null)
@@ -52,19 +52,30 @@ public class DependencySolver
 
                 for (String alternative : alternatives)
                 {
-                    alternativeReference = PackageReference.parse(alternative);
-
-                    if (tryInstall(repository, alternativeReference, null, null, 
-                        initial, commands, constraintReference))
+                    for (Package _package : repository)
                     {
-                        installed = true;
+                        alternativeReference = PackageReference.parse(alternative);
+                        currentReference = PackageReference.parse(_package);
+                        
+                        if (alternativeReference.getPackageName().equals(
+                            currentReference.getPackageName()) &&
+                            tryInstall(repository, alternativeReference, null, null, 
+                            initial, commands, currentReference))
+                        {
+                            installed = true;
+                            break;
+                        }
+                    }
+                    
+                    if (installed == true)
+                    {
                         break;
                     }
-
-                    if (!installed)
-                    {
-                        return false;
-                    }
+                }
+                
+                if (!installed)
+                {
+                    return false;
                 }
             }
         }
