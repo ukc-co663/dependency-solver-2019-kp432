@@ -20,9 +20,9 @@ public class DependencySolver
             {
                 packageReference = PackageReference.parse(_package);
                 
-                if (_package.getName().equals(constraintReference.getPackageName()) && 
-                    tryInstall(repository, packageReference, _package.getDepends(), 
-                    _package.getConflicts(), initial, commands, constraintReference))
+                if (packageReference.fits(constraintReference) &&
+                    tryInstallPackage(repository, packageReference, 
+                    _package.getDepends(), _package.getConflicts(), initial, commands))
                 {
                     break;
                 }
@@ -32,76 +32,85 @@ public class DependencySolver
         return commands;
     }
     
-    private static boolean tryInstall(
+    private static boolean tryInstallPackage(
         List<Package> repository,
         PackageReference packageReference,
         List<List<String>> dependencies,
         List<String> conflicts,
         List<String> initial, 
-        List<String> commands, 
-        PackageReference constraintReference)
+        List<String> commands)
     {
-        PackageReference alternativeReference, currentReference;
-        boolean installed;
-        
-        if (dependencies != null)
+        if (tryInstallDependencies(
+            repository, dependencies, conflicts, initial, commands))
         {
-            for (List<String> alternatives : dependencies)
-            {
-                installed = false;
-
-                for (String alternative : alternatives)
-                {
-                    for (Package _package : repository)
-                    {
-                        alternativeReference = PackageReference.parse(alternative);
-                        currentReference = PackageReference.parse(_package);
-                        
-                        if (alternativeReference.getPackageName().equals(
-                            currentReference.getPackageName()) &&
-                            tryInstall(repository, alternativeReference, null, null, 
-                            initial, commands, currentReference))
-                        {
-                            installed = true;
-                            break;
-                        }
-                    }
-                    
-                    if (installed == true)
-                    {
-                        break;
-                    }
-                }
-                
-                if (!installed)
-                {
-                    return false;
-                }
-            }
-        }
-        
-        if (!contains(initial, constraintReference) && 
-            !contains(commands, constraintReference))
-        {
-            if (packageReference.fits(constraintReference))
-            {
-                commands.add("+" + packageReference.getPackageName() 
-                    + "=" + packageReference.getPackageVersion());
-                
-                return true;
-            }
+            return install(commands, initial, packageReference);
         }
         
         return false;
     }
     
-    private static void tryUninstall(
-        List<Package> repository, 
+    private static boolean tryInstallDependencies(
+        List<Package> repository,
+        List<List<String>> dependencies,
+        List<String> conflicts,
         List<String> initial, 
-        List<String> commands, 
-        PackageReference constraintReference)
+        List<String> commands)
     {
+        PackageReference alternativeReference, packageReference;
+        boolean installed;
         
+        for (List<String> alternatives : dependencies)
+        {
+            installed = false;
+            
+            for (String alternative : alternatives)
+            {
+                alternativeReference = PackageReference.parse(alternative);
+                
+                for (Package _package : repository)
+                {
+                    packageReference = PackageReference.parse(_package);
+                    
+                    if (packageReference.fits(alternativeReference))
+                    {
+                        if (!ConflictSolver.hasConflict(repository, 
+                            packageReference, dependencies, conflicts, initial, commands))
+                        {
+                            install(commands, initial, packageReference);
+                            installed = true;
+
+                            break;
+                        }
+                    }
+                }
+                
+                if (installed)
+                {
+                    break;
+                }
+            }
+            
+            if (!installed)
+            {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+    
+    private static boolean install(List<String> commands, 
+        List<String> initial, PackageReference packageReference)
+    {
+        if (!contains(commands, packageReference) &&
+            !contains(initial, packageReference))
+        {
+            commands.add("+" + packageReference.toString());
+            
+            return true;
+        }
+        
+        return false;
     }
     
     private static boolean contains(

@@ -5,13 +5,13 @@ import java.util.regex.*;
 public class PackageReference
 {
     private final static String PACKAGE_REFERENCE_PATTERN = 
-        "([+-]?)([.a-zA-Z0-9-]+)((?:=)|(?:>)|(?:>=)|(?:<)|(?:<=))?([0-9.]+?)?";
+        "([+-]?)([.a-zA-Z0-9-+]+)((?:=)|(?:>)|(?:>=)|(?:<)|(?:<=))?([0-9.]+?)?";
     
     private PackageKind packageKind;
     private String packageName;
     private ComparisonOperator operator;
     private PackageVersion packageVersion;
-
+    
     private PackageReference() { }
 
     public PackageKind getPackageKind()
@@ -52,6 +52,28 @@ public class PackageReference
         }
         
         return false;
+    }
+    
+    @Override
+    public String toString()
+    {
+        if (operator != ComparisonOperator.None)
+        {
+            return packageName + getOperatorText(operator) + packageVersion;
+        }
+        
+        return packageName;
+    }
+    
+    private String getOperatorText(ComparisonOperator operator)
+    {
+        if (operator == ComparisonOperator.Equal) return "=";
+        if (operator == ComparisonOperator.Greater) return ">";
+        if (operator == ComparisonOperator.GreaterOrEqual) return ">=";
+        if (operator == ComparisonOperator.Less) return "<";
+        if (operator == ComparisonOperator.LessOrEqual) return "<=";
+        
+        return null;
     }
     
     public static PackageReference parse(String input)

@@ -27,8 +27,23 @@ public class PackageVersion
     
     @Override
     public String toString()
-    {
-        return String.format("%d.%d.%d.%d", major, minor, release, build);
+    {                
+        if (minor > 0)
+        {
+            if (release > 0)
+            {
+                if (build > 0)
+                {
+                    return String.format("%d.%d.%d.%d", major, minor, release, build);
+                }
+
+                return String.format("%d.%d.%d", major, minor, release);
+            }
+
+            return String.format("%d.%d", major, minor);
+        }
+
+        return String.format("%d", major);
     }
     
     public static PackageVersion parse(String input)
